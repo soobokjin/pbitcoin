@@ -17,7 +17,7 @@ class Signature:
 class PrivateKey:
     def __init__(self, secret):
         self.secret = secret
-        self.point = secret * G
+        self.pub_k = secret * G
 
     def hex(self):
         return '{:x}'.format(self.secret).zfill(64)
