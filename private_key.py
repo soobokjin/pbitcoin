@@ -52,6 +52,3 @@ class PrivateKey:
             v = hmac.new(k, v, s256).digest()
 
 
-p1 = PrivateKey(1512)
-sig = p1.sign(12341234)
-print(sig.s)
