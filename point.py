@@ -1,6 +1,8 @@
 from constant import N, A, B, P
 from field import FieldElement, S256Field
 
+from private_key import Signature
+
 
 class Point:
     def __init__(self, x, y, a, b):
@@ -103,14 +105,52 @@ class S256Point(Point):
         coef = coefficient % N
         return super().__rmul__(coef)
 
-    def verify(self, z, sig):
-        s_inv = pow(sig.s, N - 2, N)
-        u = z * s_inv % N
-        v = sig.r * s_inv % N
-        total = u * G + v * self
+    def verify(self, z: int, sig: 'Signature'):
+        s_inv: int = pow(sig.s, N - 2, N)
+        u: int = z * s_inv % N
+        v: int = sig.r * s_inv % N
+        total: 'S256Point' = u * G + v * self
         return total.x.num == sig.r
+
+    def sec(self, compressed=True):
+        byte_order: str = 'big'
+        if compressed:
+            if self.y.num % 2 == 0:
+                return b'\x02' + self.x.num.to_bytes(32, byte_order)
+            else:
+                return b'\x03' + self.x.num.to_bytes(32, byte_order)
+        else:
+            return b'\x04' + self.x.num.to_bytes(32, byte_order) + self.y.num.to_bytes(32, byte_order)
+
+    @classmethod
+    def parse(cls, sec_bin: bytes) -> 'S256Point':
+        byte_order: str = 'big'
+
+        if sec_bin[0] == b'\x04':
+            x: int = int.from_bytes(sec_bin[1:33], byte_order)
+            y: int = int.from_bytes(sec_bin[33:], byte_order)
+            return S256Point(x, y)
+
+        is_even: bool = sec_bin[0] == b'\x02'
+        x: 'S256Field' = S256Field(int.from_bytes(sec_bin[1:], byte_order))
+        alpha: 'S256Field' = x ** 3 + S256Field(B)
+        beta: 'S256Field' = alpha.sqrt()
+        if beta.num % 2 == 0:
+            even_beta: 'S256Field' = beta
+            odd_beta: 'S256Field' = S256Field(P - beta.num)
+        else:
+            even_beta: 'S256Field' = S256Field(P - beta.num)
+            odd_beta: 'S256Field' = beta
+        if is_even:
+            return S256Point(x, even_beta)
+        else:
+            return S256Point(x, odd_beta)
 
 
 G = S256Point(
     0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798,
     0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8)
+
+
+if __name__ == "__main__":
+    print(G.sec())
