@@ -1,7 +1,10 @@
+from typing import TYPE_CHECKING
+
 from pbitcoin.constant import N, A, B, P
 from pbitcoin.ecc.field import FieldElement, S256Field
 
-from private_key import Signature
+if TYPE_CHECKING:
+    from pbitcoin.ecc.private_key import Signature
 
 
 class Point:
@@ -64,11 +67,6 @@ class Point:
         if self == other and self.y == 0 * self.x:
             return self.__class__(None, None, self.a, self.b)
 
-        # Case 3: self == other
-        # Formula (x3,y3)=(x1,y1)+(x1,y1)
-        # s=(3*x1**2+a)/(2*y1)
-        # x3=s**2-2*x1
-        # y3=s*(x1-x3)-y1
         if self == other:
             s = (3 * self.x**2 + self.a) / (2 * self.y)
             x = s**2 - 2 * self.x
@@ -150,7 +148,3 @@ class S256Point(Point):
 G = S256Point(
     0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798,
     0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8)
-
-
-if __name__ == "__main__":
-    print(G.sec())
