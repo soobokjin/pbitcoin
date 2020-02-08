@@ -1,5 +1,5 @@
-from constant import N
-from private_key import PrivateKey, Signature
+from pbitcoin.constant import N
+from pbitcoin.ecc.private_key import PrivateKey, Signature
 
 z = 12345
 p1 = PrivateKey(1234567)

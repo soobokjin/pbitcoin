@@ -1,4 +1,4 @@
-from constant import P
+from pbitcoin.constant import P
 
 
 class FieldElement:

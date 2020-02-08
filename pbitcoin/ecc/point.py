@@ -1,5 +1,5 @@
-from constant import N, A, B, P
-from field import FieldElement, S256Field
+from pbitcoin.constant import N, A, B, P
+from pbitcoin.ecc.field import FieldElement, S256Field
 
 
 class Point:

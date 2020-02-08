@@ -1,8 +1,8 @@
 import hashlib
 import hmac
 
-from constant import N
-from point import G
+from pbitcoin.constant import N
+from pbitcoin.ecc.point import G
 
 
 class Signature:
@@ -50,5 +50,4 @@ class PrivateKey:
                 return candidate
             k = hmac.new(k, v + b'\x00', s256).digest()
             v = hmac.new(k, v, s256).digest()
-
 
