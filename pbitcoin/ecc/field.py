@@ -78,3 +78,6 @@ class S256Field(FieldElement):
 
     def __repr__(self):
         return '{:x}'.format(self.num).zfill(64)
+
+    def sqrt(self):
+        return self ** ((self.prime + 1) / 4)
