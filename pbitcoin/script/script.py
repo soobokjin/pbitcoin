@@ -1,3 +1,4 @@
+from io import BytesIO
 from logging import getLogger
 
 from pbitcoin.helper.helper import (
@@ -9,7 +10,7 @@ from pbitcoin.helper.helper import (
 from pbitcoin.script.op import (
     OP_CODE_FUNCTIONS,
     OP_CODE_NAMES,
-)
+    op_hash160, op_equal, op_verify)
 
 LOGGER = getLogger(__name__)
 
@@ -148,8 +149,25 @@ class Script:
                         LOGGER.info('bad op: {}'.format(OP_CODE_NAMES[cmd]))
                         return False
             else:
-                # add the cmd to the stack
                 stack.append(cmd)
+                if len(cmds) == 3 and cmds[0] == 0xa9 \
+                    and type(cmds[1]) == bytes and len(cmds[1]) == 20 \
+                    and cmds[2] == 0x87:  # <1>
+                    cmds.pop()  # <2>
+                    h160 = cmds.pop()
+                    cmds.pop()
+                    if not op_hash160(stack):  # <3>
+                        return False
+                    stack.append(h160)
+                    if not op_equal(stack):
+                        return False
+                    if not op_verify(stack):  # <4>
+                        LOGGER.info('bad p2sh h160')
+                        return False
+                    redeem_script = encode_varint(len(cmd)) + cmd  # <5>
+                    stream = BytesIO(redeem_script)
+                    cmds.extend(Script.parse(stream).cmds)  # <6>
+                    # end::source1[]
         if len(stack) == 0:
             return False
         if stack.pop() == b'':

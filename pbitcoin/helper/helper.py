@@ -2,7 +2,6 @@ from unittest import TestCase, TestSuite, TextTestRunner
 
 import hashlib
 
-
 SIGHASH_ALL = 1
 SIGHASH_NONE = 2
 SIGHASH_SINGLE = 3
@@ -101,7 +100,55 @@ def encode_varint(i):
         return b'\xff' + int_to_little_endian(i, 8)
     else:
         raise ValueError('integer too large: {}'.format(i))
+
+
 # end::source1[]
+
+def bits_to_target(bits):
+    '''Turns bits into a target (large 256-bit integer)'''
+    # last byte is exponent
+    exponent: int = bits[-1]
+    # the first three bytes are the coefficient in little endian
+    coefficient: int = little_endian_to_int(bits[:-1])
+    # the formula is:
+    return coefficient * 256 ** (exponent - 3)
+
+
+def merkle_parent(hash1, hash2):
+    '''Takes the binary hashes and calculates the hash256'''
+    # return the hash256 of hash1 + hash2
+
+    return hash256(hash1 + hash2)
+
+
+def merkle_parent_level(hashes):
+    '''Takes a list of binary hashes and returns a list that's half
+    the length'''
+    if len(hashes) % 2 == 1:
+        hashes.append(hashes[-1])
+    parent_level = []
+
+    for i in range(0, len(hashes), 2):
+        parent = merkle_parent(hashes[i], hashes[i + 1])
+        parent_level.append(parent)
+    return parent_level
+
+
+def merkle_root(hashes):
+    '''Takes a list of binary hashes and returns the merkle root
+    '''
+    while len(hashes) > 1:
+        hashes = merkle_parent_level(hashes)
+    return hashes[0]
+
+
+def bytes_to_bit_field(some_bytes):
+    flag_bits = []
+    for byte in some_bytes:
+        for _ in range(8):
+            flag_bits.append(byte & 1)
+            byte >>= 1
+    return flag_bits
 
 
 class HelperTest(TestCase):
